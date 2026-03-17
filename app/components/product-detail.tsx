@@ -22,7 +22,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-      <ProductGallery images={product.images} productName={product.name} />
+      <ProductGallery images={product.images.all()} productName={product.name} />
 
       <div className="flex flex-col gap-4">
         <Badge variant="outline" className="w-fit">

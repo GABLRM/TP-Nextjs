@@ -1,33 +1,44 @@
-import { ProductImages } from "@/domain/product/product-images.value-object";
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 
 export function ProductGallery({
   images,
   productName,
 }: {
-  images: ProductImages;
+  images: string[];
   productName: string;
 }) {
-  const allImages = images.all();
+  const [selected, setSelected] = useState(0);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+    <div className="flex flex-col gap-3">
+      {/* Image principale */}
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-muted">
         <Image
-          src={images.main}
-          alt={productName}
+          key={images[selected]}
+          src={images[selected]}
+          alt={`${productName} - vue ${selected + 1}`}
           fill
-          className="object-cover"
+          className="object-cover transition-opacity duration-200"
           sizes="(max-width: 1024px) 100vw, 50vw"
           priority
         />
       </div>
-      {allImages.length > 1 && (
+
+      {/* Miniatures */}
+      {images.length > 1 && (
         <div className="grid grid-cols-4 gap-2">
-          {allImages.map((img, index) => (
-            <div
+          {images.map((img, index) => (
+            <button
               key={index}
-              className="relative aspect-square overflow-hidden rounded-md bg-muted"
+              onClick={() => setSelected(index)}
+              className={`relative aspect-square overflow-hidden rounded-lg bg-muted transition-all ${
+                selected === index
+                  ? "ring-2 ring-foreground ring-offset-2"
+                  : "opacity-60 hover:opacity-100"
+              }`}
             >
               <Image
                 src={img}
@@ -36,7 +47,7 @@ export function ProductGallery({
                 className="object-cover"
                 sizes="(max-width: 1024px) 25vw, 12vw"
               />
-            </div>
+            </button>
           ))}
         </div>
       )}

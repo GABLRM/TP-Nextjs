@@ -12,6 +12,9 @@ export async function generateStaticParams() {
   return products.map((p) => ({ slug: p.slug }));
 }
 
+export const dynamicParams = false;
+export const revalidate = 60;
+
 export default async function ProductPage({
   params,
 }: {

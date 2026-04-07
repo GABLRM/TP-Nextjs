@@ -1,7 +1,12 @@
+import { Suspense } from "react";
 import { GetAllProductsUseCase } from "@/application/product/get-all-products.use-case";
 import { PrismaProductRepository } from "@/infrastructure/product/prisma-product.repository";
 import { CategoryFilter } from "@/app/components/category-filter";
 import { ProductGrid } from "@/app/components/product-grid";
+import { SponsoredProductsSection } from "@/app/components/sponsored-products-section";
+import { SponsoredProductsSkeleton } from "@/app/components/skeletons/sponsored-products-skeleton";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage({
   searchParams,
@@ -34,6 +39,10 @@ export default async function HomePage({
       </div>
 
       <ProductGrid products={filtered} />
+
+      <Suspense fallback={<SponsoredProductsSkeleton count={6} />}>
+        <SponsoredProductsSection count={6} />
+      </Suspense>
     </main>
   );
 }

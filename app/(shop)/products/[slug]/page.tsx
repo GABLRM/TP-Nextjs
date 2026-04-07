@@ -1,19 +1,12 @@
-import { GetAllProductsUseCase } from "@/application/product/get-all-products.use-case";
-import { GetProductBySlugUseCase } from "@/application/product/get-product-by-slug.use-case";
-import { GetSimilarProductsUseCase } from "@/application/product/get-similar-products.use-case";
-import { PrismaProductRepository } from "@/infrastructure/product/prisma-product.repository";
-import { ProductDetail } from "@/app/components/product-detail";
-import { SimilarProducts } from "@/app/components/similar-products";
-import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ProductDetailSection } from "@/app/components/product-detail-section";
+import { SimilarProductsSection } from "@/app/components/similar-products-section";
+import { SponsoredProductsSection } from "@/app/components/sponsored-products-section";
+import { ProductDetailSkeleton } from "@/app/components/skeletons/product-detail-skeleton";
+import { SimilarProductsSkeleton } from "@/app/components/skeletons/similar-products-skeleton";
+import { SponsoredProductsSkeleton } from "@/app/components/skeletons/sponsored-products-skeleton";
 
-export async function generateStaticParams() {
-  const repo = new PrismaProductRepository();
-  const products = await new GetAllProductsUseCase(repo).execute();
-  return products.map((p) => ({ slug: p.slug }));
-}
-
-export const dynamicParams = false;
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function ProductPage({
   params,
@@ -21,19 +14,23 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const repo = new PrismaProductRepository();
-
-  const product = await new GetProductBySlugUseCase(repo).execute(slug);
-  if (!product) notFound();
-
-  const similarProducts = await new GetSimilarProductsUseCase(repo).execute(
-    product.similarProductSlugs
-  );
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
-      <ProductDetail product={product} />
-      <SimilarProducts products={similarProducts} />
+      {/* Suspense 1 — fiche produit principale (~800ms) */}
+      <Suspense fallback={<ProductDetailSkeleton />}>
+        <ProductDetailSection slug={slug} />
+      </Suspense>
+
+      {/* Suspense 2 — produits similaires (~2000ms), indépendant */}
+      <Suspense fallback={<SimilarProductsSkeleton />}>
+        <SimilarProductsSection slug={slug} />
+      </Suspense>
+
+      {/* Suspense 3 — produits sponsorisés (latence réseau réelle) */}
+      <Suspense fallback={<SponsoredProductsSkeleton count={4} />}>
+        <SponsoredProductsSection count={4} />
+      </Suspense>
     </main>
   );
 }

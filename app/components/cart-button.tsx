@@ -1,12 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/app/context/cart-context";
 import Link from "next/link";
 
 export function CartButton() {
-  const { totalCount } = useCart();
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/cart")
+      .then((r) => r.json())
+      .then(({ count }) => setCount(count));
+
+    function onCartUpdated(e: Event) {
+      const detail = (e as CustomEvent<{ count: number }>).detail;
+      setCount(detail.count);
+    }
+
+    window.addEventListener("cart:updated", onCartUpdated);
+    return () => window.removeEventListener("cart:updated", onCartUpdated);
+  }, []);
 
   return (
     <Link href="/cart" className="relative">
@@ -26,9 +40,9 @@ export function CartButton() {
           <line x1="3" x2="21" y1="6" y2="6" />
           <path d="M16 10a4 4 0 0 1-8 0" />
         </svg>
-        {totalCount > 0 && (
+        {count > 0 && (
           <Badge className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px]">
-            {totalCount > 99 ? "99+" : totalCount}
+            {count > 99 ? "99+" : count}
           </Badge>
         )}
       </Button>

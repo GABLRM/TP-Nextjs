@@ -1,9 +1,10 @@
-"use client";
-
-import { useCart } from "@/app/context/cart-context";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import { cookies } from "next/headers";
 import Link from "next/link";
+import { getCartWithItems } from "@/lib/cart";
+import { CartList } from "@/app/components/cart-list";
+import { Button } from "@/components/ui/button";
+
+export const dynamic = "force-dynamic";
 
 function formatPrice(amount: number) {
   return new Intl.NumberFormat("fr-FR", {
@@ -12,9 +13,12 @@ function formatPrice(amount: number) {
   }).format(amount);
 }
 
-export default function CartPage() {
-  const { items, removeItem, updateQuantity, totalCount, totalPrice } =
-    useCart();
+export default async function CartPage() {
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get("cart_id")?.value;
+
+  const cart = sessionId ? await getCartWithItems(sessionId) : null;
+  const items = cart?.items ?? [];
 
   if (items.length === 0) {
     return (
@@ -50,6 +54,12 @@ export default function CartPage() {
     );
   }
 
+  const totalCount = items.reduce((sum, i) => sum + i.quantity, 0);
+  const totalPrice = items.reduce(
+    (sum, i) => sum + i.product.price * i.quantity,
+    0
+  );
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="mb-8 text-2xl font-bold">
@@ -60,87 +70,12 @@ export default function CartPage() {
       </h1>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Liste des articles */}
-        <div className="space-y-4 lg:col-span-2">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex gap-4 rounded-2xl border border-border/60 bg-card p-4"
-            >
-              {/* Image */}
-              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-muted">
-                <Image
-                  src={item.image}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                  sizes="96px"
-                />
-              </div>
-
-              {/* Infos */}
-              <div className="flex flex-1 flex-col justify-between">
-                <div className="flex items-start justify-between gap-2">
-                  <Link
-                    href={`/products/${item.slug}`}
-                    className="font-semibold leading-snug hover:underline"
-                  >
-                    {item.name}
-                  </Link>
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-                    aria-label="Supprimer"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M18 6 6 18" />
-                      <path d="m6 6 12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  {/* Quantité */}
-                  <div className="flex items-center gap-2 rounded-lg border border-border px-1">
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="flex h-7 w-7 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-                      aria-label="Diminuer la quantité"
-                    >
-                      −
-                    </button>
-                    <span className="w-4 text-center text-sm font-medium">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="flex h-7 w-7 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-                      aria-label="Augmenter la quantité"
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <span className="font-semibold">
-                    {formatPrice(item.price * item.quantity)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* Liste interactive (Client Component) */}
+        <div className="lg:col-span-2">
+          <CartList items={items} />
         </div>
 
-        {/* Résumé commande */}
+        {/* Résumé — rendu côté serveur */}
         <div className="h-fit rounded-2xl border border-border/60 bg-card p-6">
           <h2 className="mb-4 font-semibold">Résumé</h2>
 
@@ -148,10 +83,10 @@ export default function CartPage() {
             {items.map((item) => (
               <div key={item.id} className="flex justify-between gap-2">
                 <span className="line-clamp-1 text-muted-foreground">
-                  {item.name} × {item.quantity}
+                  {item.product.name} × {item.quantity}
                 </span>
                 <span className="shrink-0">
-                  {formatPrice(item.price * item.quantity)}
+                  {formatPrice(item.product.price * item.quantity)}
                 </span>
               </div>
             ))}
@@ -169,7 +104,9 @@ export default function CartPage() {
           </Button>
 
           <Link href="/" className="mt-2 block w-full">
-            <Button variant="outline" className="w-full">Continuer les achats</Button>
+            <Button variant="outline" className="w-full">
+              Continuer les achats
+            </Button>
           </Link>
         </div>
       </div>

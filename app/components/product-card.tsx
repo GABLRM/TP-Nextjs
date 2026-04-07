@@ -82,11 +82,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         <div className="mt-3">
           <AddToCartButton
-            id={product.id}
-            slug={product.slug}
-            name={product.name}
-            price={product.price.getAmount()}
-            image={product.images.main}
+            productId={product.id}
             disabled={isOutOfStock}
           />
         </div>

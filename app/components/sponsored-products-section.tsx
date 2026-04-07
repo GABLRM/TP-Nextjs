@@ -1,5 +1,6 @@
 import { fetchSponsoredProducts } from "@/lib/mock-shop";
 import { SponsoredProductGrid } from "./sponsored-product-grid";
+import { SponsoredRefreshButton } from "./sponsored-refresh-button";
 
 export async function SponsoredProductsSection({
   count = 6,
@@ -12,7 +13,10 @@ export async function SponsoredProductsSection({
 
   return (
     <section className="mt-16">
-      <h2 className="mb-6 text-2xl font-bold">Produits sponsorisés</h2>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Produits sponsorisés</h2>
+        <SponsoredRefreshButton />
+      </div>
       <SponsoredProductGrid products={products} />
     </section>
   );

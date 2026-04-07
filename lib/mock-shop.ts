@@ -54,9 +54,23 @@ function mapProduct(raw: RawProduct): SponsoredProduct {
 
 // ── Public fetch functions ───────────────────────────────────────────────────
 
+/**
+ * Stratégies de cache disponibles (changer pour observer l'effet dans la console) :
+ *
+ * cache: "force-cache"                          → toujours depuis le cache (pas de refetch)
+ * cache: "no-store"                             → jamais mis en cache (fetch à chaque requête)
+ * next: { revalidate: 300 }                     → ISR — cache 300s, puis refetch en arrière-plan
+ * next: { revalidate: 300, tags: ["..."] }      → ISR + invalidation ciblée via revalidateTag
+ *
+ * Observer dans la console :
+ *   ~0ms   → réponse servie depuis le cache Next.js (Data Cache)
+ *   ~200ms+ → vraie requête réseau (cache expiré ou invalidé)
+ */
 export async function fetchSponsoredProducts(
   count = 6
 ): Promise<SponsoredProduct[]> {
+  const start = performance.now();
+
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -73,8 +87,12 @@ export async function fetchSponsoredProducts(
         }
       }`,
     }),
-    next: { revalidate: 300 },
+    next: { revalidate: 300, tags: ["sponsored-products"] },
   });
+
+  console.log(
+    `[mockShop] fetch products ${(performance.now() - start).toFixed(0)}ms`
+  );
 
   const json = (await res.json()) as ProductsResponse;
   return json.data.products.edges.map((e) => mapProduct(e.node));
@@ -83,6 +101,8 @@ export async function fetchSponsoredProducts(
 export async function fetchSponsoredProductByHandle(
   handle: string
 ): Promise<SponsoredProduct | null> {
+  const start = performance.now();
+
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -95,8 +115,12 @@ export async function fetchSponsoredProductByHandle(
         }
       }`,
     }),
-    next: { revalidate: 300 },
+    next: { revalidate: 300, tags: ["sponsored-products"] },
   });
+
+  console.log(
+    `[mockShop] fetch product "${handle}" ${(performance.now() - start).toFixed(0)}ms`
+  );
 
   const json = (await res.json()) as ProductResponse;
   const raw = json.data.productByHandle;

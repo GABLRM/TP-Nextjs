@@ -1,8 +1,12 @@
+import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { CartButton } from "@/app/components/cart-button";
+import { SignOutButton } from "@/app/components/signout-button";
 import Link from "next/link";
 
-export default function Navbar() {
+export default async function Navbar() {
+  const session = await auth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -42,6 +46,31 @@ export default function Navbar() {
               <path d="m21 21-4.3-4.3" />
             </svg>
           </Button>
+
+          {session?.user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">
+                {session.user.name ?? session.user.email}
+              </span>
+              <SignOutButton />
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Se connecter
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-80"
+              >
+                S&apos;inscrire
+              </Link>
+            </div>
+          )}
+
           <CartButton />
         </div>
       </div>

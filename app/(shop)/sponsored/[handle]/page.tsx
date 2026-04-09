@@ -4,8 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProductGallery } from "@/app/components/product-gallery";
 
-export const dynamic = "force-dynamic";
-
 function formatPrice(amount: string, currencyCode: string): string {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",

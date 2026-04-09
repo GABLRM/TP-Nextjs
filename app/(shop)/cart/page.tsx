@@ -4,8 +4,6 @@ import { getCartWithItems } from "@/lib/cart";
 import { CartList } from "@/app/components/cart-list";
 import { Button } from "@/components/ui/button";
 
-export const dynamic = "force-dynamic";
-
 function formatPrice(amount: number) {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",

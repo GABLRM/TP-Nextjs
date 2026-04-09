@@ -1,6 +1,9 @@
+import { cacheLife } from "next/cache";
 import Link from "next/link";
 
-export default function Footer() {
+export default async function Footer() {
+  "use cache";
+  cacheLife("weeks"); // contenu statique — pas de raison de revalider souvent
   return (
     <footer className="border-t border-border/40 bg-zinc-950 text-zinc-400">
       <div className="mx-auto max-w-7xl px-6 py-10">

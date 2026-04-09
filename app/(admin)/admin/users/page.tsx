@@ -1,6 +1,8 @@
+import { connection } from "next/server";
 import { GetAllUsersUseCase } from "@/application/user/get-all-users.use-case";
 import { PrismaUserRepository } from "@/infrastructure/user/prisma-user.repository";
 import { UserRole } from "@/domain/user/user.entity";
+import { Suspense } from "react";
 
 function RoleCell({ role }: { role: UserRole }) {
   if (role === "admin") {
@@ -19,7 +21,8 @@ function RoleCell({ role }: { role: UserRole }) {
   );
 }
 
-export default async function AdminUsersPage() {
+async function UsersTable() {
+  await connection();
   const repo = new PrismaUserRepository();
   const users = await new GetAllUsersUseCase(repo).execute();
 
@@ -33,27 +36,17 @@ export default async function AdminUsersPage() {
             {users.length > 1 ? "s" : ""}
           </p>
         </div>
-        <p className="text-xs text-zinc-400">
-          Modifiez les rôles via Prisma Studio
-        </p>
+        <p className="text-xs text-zinc-400">Modifiez les rôles via Prisma Studio</p>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-zinc-100 bg-zinc-50">
-              <th className="px-4 py-3 text-left font-semibold text-zinc-500">
-                Nom
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-zinc-500">
-                Email
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-zinc-500">
-                Rôle
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-zinc-500">
-                Inscrit le
-              </th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-500">Nom</th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-500">Email</th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-500">Rôle</th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-500">Inscrit le</th>
             </tr>
           </thead>
           <tbody>
@@ -80,5 +73,13 @@ export default async function AdminUsersPage() {
         </table>
       </div>
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={<div className="text-sm text-zinc-400">Chargement...</div>}>
+      <UsersTable />
+    </Suspense>
   );
 }

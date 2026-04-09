@@ -1,5 +1,4 @@
-import { GetAllProductsUseCase } from "@/application/product/get-all-products.use-case";
-import { PrismaProductRepository } from "@/infrastructure/product/prisma-product.repository";
+import { getCachedProducts } from "@/lib/product-cache";
 import { CategoryFilter } from "./category-filter";
 import { ProductGrid } from "./product-grid";
 
@@ -9,8 +8,7 @@ export async function CatalogSection({
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
-  const repo = new PrismaProductRepository();
-  const allProducts = await new GetAllProductsUseCase(repo).execute();
+  const allProducts = await getCachedProducts();
 
   const categories = Array.from(
     new Set(allProducts.map((p) => p.category))

@@ -14,29 +14,30 @@ export async function generateStaticParams() {
   return products.map((p) => ({ slug: p.slug }));
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+async function ProductPageContent({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
-      {/* Statique — mis en cache via "use cache" dans le composant */}
       <Suspense fallback={<ProductDetailSkeleton />}>
         <ProductDetailSection slug={slug} />
       </Suspense>
 
-      {/* Dynamique — recalculé à chaque requête (Prisma, pas de cache) */}
       <Suspense fallback={<SimilarProductsSkeleton />}>
         <SimilarProductsSection slug={slug} />
       </Suspense>
 
-      {/* Dynamique — fetch externe avec revalidate (cache fetch) */}
       <Suspense fallback={<SponsoredProductsSkeleton count={4} />}>
         <SponsoredProductsSection count={4} />
       </Suspense>
     </main>
+  );
+}
+
+export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-7xl px-6 py-10"><ProductDetailSkeleton /></div>}>
+      <ProductPageContent params={params} />
+    </Suspense>
   );
 }

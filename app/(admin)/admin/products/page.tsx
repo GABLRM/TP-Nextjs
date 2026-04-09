@@ -1,7 +1,9 @@
+import { connection } from "next/server";
 import { GetAllProductsUseCase } from "@/application/product/get-all-products.use-case";
 import { PrismaProductRepository } from "@/infrastructure/product/prisma-product.repository";
 import { StockStatus } from "@/domain/product/product.entity";
 import Link from "next/link";
+import { Suspense } from "react";
 
 function StockCell({ status, qty }: { status: StockStatus; qty: number }) {
   if (status === "out_of_stock") {
@@ -28,13 +30,13 @@ function StockCell({ status, qty }: { status: StockStatus; qty: number }) {
   );
 }
 
-export default async function AdminProductsPage() {
+async function ProductsTable() {
+  await connection();
   const repo = new PrismaProductRepository();
   const products = await new GetAllProductsUseCase(repo).execute();
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold">Produits</h2>
@@ -50,29 +52,17 @@ export default async function AdminProductsPage() {
         </Link>
       </div>
 
-      {/* Table */}
       <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-zinc-100 bg-zinc-50">
-              <th className="px-4 py-3 text-left font-semibold text-zinc-500">
-                Produit
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-zinc-500">
-                Catégorie
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-zinc-500">
-                Marque
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-zinc-500">
-                SKU
-              </th>
-              <th className="px-4 py-3 text-right font-semibold text-zinc-500">
-                Prix
-              </th>
-              <th className="px-4 py-3 text-left font-semibold text-zinc-500">
-                Stock
-              </th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-500">Produit</th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-500">Catégorie</th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-500">Marque</th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-500">SKU</th>
+              <th className="px-4 py-3 text-right font-semibold text-zinc-500">Prix</th>
+              <th className="px-4 py-3 text-left font-semibold text-zinc-500">Stock</th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody>
@@ -84,26 +74,21 @@ export default async function AdminProductsPage() {
                 }`}
               >
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/products/${product.slug}`}
-                    className="font-medium text-zinc-900 hover:underline"
-                  >
+                  <Link href={`/products/${product.slug}`} className="font-medium text-zinc-900 hover:underline">
                     {product.name}
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-zinc-600">{product.category}</td>
                 <td className="px-4 py-3 text-zinc-600">{product.brand}</td>
-                <td className="px-4 py-3 font-mono text-xs text-zinc-400">
-                  {product.sku}
-                </td>
-                <td className="px-4 py-3 text-right font-semibold text-zinc-900">
-                  {product.price.format()}
-                </td>
+                <td className="px-4 py-3 font-mono text-xs text-zinc-400">{product.sku}</td>
+                <td className="px-4 py-3 text-right font-semibold text-zinc-900">{product.price.format()}</td>
                 <td className="px-4 py-3">
-                  <StockCell
-                    status={product.getStockStatus()}
-                    qty={product.stock.getQuantity()}
-                  />
+                  <StockCell status={product.getStockStatus()} qty={product.stock.getQuantity()} />
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <Link href={`/admin/products/${product.slug}`} className="text-xs font-medium text-zinc-500 hover:text-zinc-900 hover:underline">
+                    Modifier
+                  </Link>
                 </td>
               </tr>
             ))}
@@ -111,5 +96,13 @@ export default async function AdminProductsPage() {
         </table>
       </div>
     </div>
+  );
+}
+
+export default function AdminProductsPage() {
+  return (
+    <Suspense fallback={<div className="text-sm text-zinc-400">Chargement...</div>}>
+      <ProductsTable />
+    </Suspense>
   );
 }

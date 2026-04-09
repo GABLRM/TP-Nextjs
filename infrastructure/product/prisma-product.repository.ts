@@ -1,7 +1,7 @@
 import { Price } from "@/domain/product/price.value-object";
 import { Product } from "@/domain/product/product.entity";
 import { ProductImages } from "@/domain/product/product-images.value-object";
-import { IProductRepository } from "@/domain/product/product.repository";
+import { IProductRepository, ProductUpdateParams } from "@/domain/product/product.repository";
 import { Stock } from "@/domain/product/stock.value-object";
 import { prisma } from "@/lib/prisma";
 
@@ -57,5 +57,22 @@ export class PrismaProductRepository implements IProductRepository {
       where: { slug: { in: slugs } },
     });
     return rows.map(mapToEntity);
+  }
+
+  async update(id: string, params: ProductUpdateParams): Promise<Product> {
+    const row = await prisma.product.update({
+      where: { id },
+      data: {
+        name: params.name,
+        brand: params.brand,
+        category: params.category,
+        description: params.description,
+        price: params.price,
+        stock: params.stock,
+        sku: params.sku,
+        imageMain: params.imageMain,
+      },
+    });
+    return mapToEntity(row);
   }
 }
